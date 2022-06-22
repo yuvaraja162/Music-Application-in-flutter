@@ -13,7 +13,7 @@ import 'AboutPage.dart';
 import 'Player.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:path_provider/path_provider.dart';
-
+import 'package:textfield_search/textfield_search.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 class Homepage extends StatefulWidget {
@@ -28,15 +28,37 @@ class _HomepageState extends State<Homepage> {
   ProductModel? model;
   var fetch;
   ConnectionState connectivity = ConnectionState.none;
+  TextEditingController myController = TextEditingController();
+  final _testList = [
+    'Test Item 1',
+    'Test Item 2',
+    'Test Item 3',
+    'Test Item 4',
+  ];
 
   @override
   void initState() {
+    myController.addListener(fetchresultsongs);
     super.initState();
     // print(connectionchecker());
     connectionchecker();
     download();
-    getsongs();
+    //getdata();
+    //getsongs();
+    fetch = APIService.getsongs();
     //print(connectivity);
+  }
+
+  fetchresultsongs() {
+    setState(() {
+      if (myController.text.isNotEmpty) {
+        fetch = APIService.getresult(myController.text);
+      } else {
+        fetch = APIService.getsongs();
+      }
+    });
+
+    // print("text field: ${myController.text}");
   }
 
   @override
@@ -50,11 +72,38 @@ class _HomepageState extends State<Homepage> {
     //if (fileExists) fetch = await readsongdata();
 
     await connectionchecker();
+
     // if (connectivity == ConnectionState.active) {
     // fetch = APIService.getsongs();
     // // } else {
     //   //
     // }
+    return result;
+  }
+
+  List result = <dynamic>[];
+  getdata() async {
+    print("getdetails");
+    await Future.delayed(Duration(milliseconds: 1000));
+
+    List<ProductModel>? model;
+
+    model = await APIService.getdetails();
+    setState(() {
+      for (int i = 0; i < model!.length; i++) {
+        result.add(model[i].song_name.toString());
+        result.add(model[i].song_artist.toString());
+        result.add(model[i].song_album.toString());
+      }
+      result.removeWhere((item) => item.isEmpty);
+
+      //  print(result);
+
+      result = result.toSet().toList();
+    });
+
+    //print(result);
+    return result;
   }
 
   File? jsonFile;
@@ -215,16 +264,79 @@ class _HomepageState extends State<Homepage> {
                   ]),
                 ),
                 Padding(padding: EdgeInsets.only(top: 20)),
-                TextField(
-                  onSubmitted: (String value) {
-                    //search();
+                // TextField(
+                //   onSubmitted: (String value) {
+                //     //search();
+                //   },
+                //   // controller: searchBar,
+                //   style: TextStyle(
+                //     fontSize: 16,
+                //     color: accent,
+                //   ),
+                //   cursorColor: Colors.green[50],
+                //   decoration: InputDecoration(
+                //     fillColor: Color(0xff263238),
+                //     filled: true,
+                //     enabledBorder: const OutlineInputBorder(
+                //       borderRadius: BorderRadius.all(
+                //         Radius.circular(100),
+                //       ),
+                //       borderSide: BorderSide(
+                //         color: Color(0xff263238),
+                //       ),
+                //     ),
+                //     focusedBorder: OutlineInputBorder(
+                //       borderRadius: BorderRadius.all(
+                //         Radius.circular(100),
+                //       ),
+                //       borderSide: BorderSide(color: accent),
+                //     ),
+                //     suffixIcon: IconButton(
+                //       icon: true
+                //           ? SizedBox(
+                //               height: 18,
+                //               width: 18,
+                //               child: Center(
+                //                   // child: CircularProgressIndicator(
+                //                   //   valueColor:
+                //                   //       AlwaysStoppedAnimation<Color>(accent),
+                //                   // ),
+                //                   ),
+                //             )
+                //           : Icon(
+                //               Icons.search,
+                //               color: accent,
+                //             ),
+                //       color: accent,
+                //       onPressed: () {
+                //         // search();
+                //       },
+                //     ),
+                //     border: InputBorder.none,
+                //     hintText: "Search...",
+                //     hintStyle: TextStyle(
+                //       color: accent,
+                //     ),
+                //     contentPadding: const EdgeInsets.only(
+                //       left: 18,
+                //       right: 20,
+                //       top: 14,
+                //       bottom: 14,
+                //     ),
+                //   ),
+                // ),
+                TextFieldSearch(
+                  //initialList: _testList,
+                  label: 'search',
+                  controller: myController,
+                  future: () {
+                    // print(getdata());
+                    return getdata();
                   },
-                  // controller: searchBar,
-                  style: TextStyle(
+                  textStyle: TextStyle(
                     fontSize: 16,
                     color: accent,
                   ),
-                  cursorColor: Colors.green[50],
                   decoration: InputDecoration(
                     fillColor: Color(0xff263238),
                     filled: true,
@@ -242,27 +354,19 @@ class _HomepageState extends State<Homepage> {
                       ),
                       borderSide: BorderSide(color: accent),
                     ),
-                    suffixIcon: IconButton(
-                      icon: true
-                          ? SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: Center(
-                                  // child: CircularProgressIndicator(
-                                  //   valueColor:
-                                  //       AlwaysStoppedAnimation<Color>(accent),
-                                  // ),
-                                  ),
-                            )
-                          : Icon(
-                              Icons.search,
-                              color: accent,
-                            ),
-                      color: accent,
-                      onPressed: () {
-                        // search();
-                      },
-                    ),
+                    suffixIcon: myController.text.isEmpty
+                        ? null
+                        : IconButton(
+                            color: accent,
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              if (myController.text.isEmpty) {
+                                //close(context, null);
+                              } else {
+                                myController.text = '';
+                              }
+                            },
+                          ),
                     border: InputBorder.none,
                     hintText: "Search...",
                     hintStyle: TextStyle(
@@ -275,6 +379,12 @@ class _HomepageState extends State<Homepage> {
                       bottom: 14,
                     ),
                   ),
+
+                  // getSelectedValue: (value) {
+                  //   setState(() {
+                  //     fetch = APIService.getresult(value);
+                  //   });
+                  // },
                 ),
                 SizedBox(
                   height: 10,
@@ -292,12 +402,12 @@ class _HomepageState extends State<Homepage> {
                 ),
                 FutureBuilder(
                   future: connectivity == ConnectionState.active
-                      ? APIService.getsongs()
+                      ? fetch
                       : readsongdata(),
                   builder: (BuildContext context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData) {
                       List<ProductModel> data = snapshot.data;
-                      print(data[0].song_artist);
+                      //print(data[0].song_artist);
                       return Container(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -397,13 +507,6 @@ class _HomepageState extends State<Homepage> {
                           ],
                         ),
                       );
-                      return Center(
-                          child: Padding(
-                        padding: const EdgeInsets.all(35.0),
-                        child: CircularProgressIndicator(
-                          valueColor: new AlwaysStoppedAnimation<Color>(accent),
-                        ),
-                      ));
                     } else {
                       return Text("data");
                     }

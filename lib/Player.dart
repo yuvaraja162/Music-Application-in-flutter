@@ -233,6 +233,10 @@ class _MusicplayerState extends State<Musicplayer> {
   }
 
   writesongdata(ProductModel productModel) async {
+    Fluttertoast.showToast(
+        msg: 'Downloading..', toastLength: Toast.LENGTH_LONG);
+
+    ///
     ///
     ///
     ///
@@ -277,6 +281,8 @@ class _MusicplayerState extends State<Musicplayer> {
 
       jsonFile!.writeAsString(json.encode(songs));
       Text(json.encode(songs));
+      return Fluttertoast.showToast(
+          msg: 'Dowmloading..', toastLength: Toast.LENGTH_SHORT);
 
       ///
       ///
@@ -608,6 +614,7 @@ class _MusicplayerState extends State<Musicplayer> {
 
   stop() async {
     await player.stop();
+    await player1.stop();
     if (mounted)
       setState(() {
         //print("stop");

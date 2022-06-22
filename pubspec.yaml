@@ -45,6 +45,7 @@ dependencies:
   fluttertoast: ^8.0.9
   path_provider: ^2.0.11
   flutter_easyloading: ^3.0.5
+  textfield_search: ^0.10.0
 
 dev_dependencies:
   flutter_test:
